@@ -56,17 +56,10 @@ fun RecordingScreen(
     val context = LocalContext.current
 
     Column(verticalArrangement = Arrangement.SpaceBetween, modifier = modifier.fillMaxSize()) {
-        Caption(modifier = modifier)
-        AudioControl(
-            isPlaying = isPlaying,
-            startPlaying = { viewModel.startPlaying("${context.externalCacheDir!!.absolutePath}/testing.mp3") },
-            pause = { /*TODO*/ },
-            stopPlaying = { viewModel.stopRecording() },
-            modifier = modifier
-        )
-        RecordControl(
-            isRecording,
-            startRecording = {
+        Captions(modifier = modifier)
+        MediaController(
+            isRecording = false,
+            onStartRecording = {
                 when (PackageManager.PERMISSION_GRANTED) {
                     ContextCompat.checkSelfPermission(
                         context,
@@ -79,16 +72,15 @@ fun RecordingScreen(
                         launcher.launch(Manifest.permission.RECORD_AUDIO)
                     }
                 }
-
-            }, stopRecording = {
-                viewModel.stopRecording()
-            }, modifier = modifier
+            },
+            onStopRecording = { viewModel.stopRecording() },
+            modifier = modifier
         )
     }
 }
 
 @Composable
-private fun Caption(modifier: Modifier) {
+private fun Captions(modifier: Modifier) {
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
@@ -101,66 +93,23 @@ private fun Caption(modifier: Modifier) {
 }
 
 @Composable
-private fun RecordControl(
+private fun MediaController(
     isRecording: Boolean,
-    startRecording: () -> Unit,
-    stopRecording: () -> Unit,
+    onStartRecording: () -> Unit,
+    onStopRecording: () -> Unit,
     modifier: Modifier
 ) {
-    Row(
-        horizontalArrangement = Arrangement.Center,
-        modifier = modifier
-            .fillMaxWidth()
-            .background(Color.Gray)
-    ) {
-        IconButton(onClick = {
-            if (!isRecording) {
-                startRecording()
-            } else {
-                stopRecording()
-            }
-        }) {
-            Icon(
-                painter = painterResource(
-                    id = if (!isRecording) R.drawable.baseline_mic_24 else R.drawable.baseline_mic_off_24
-                ),
-                contentDescription = if (!isRecording) "Start recording" else "Stop recording"
-            )
-        }
+    Column(modifier = modifier) {
+        val amplitudes =
+            listOf(100F, 200F, 300F, 400f, 1000F, 2000F, 15000F, 25000F, 30000F, 32767F)
+        AudioWaveFormAudioSeeker(amplitudes)
+        PlaybackControl(
+            isRecording,
+            startRecording = onStartRecording,
+            stopRecording = onStopRecording,
+            modifier = modifier
+        )
     }
-}
-
-@Composable
-private fun AudioControl(
-    isPlaying: Boolean,
-    startPlaying: () -> Unit,
-    pause: () -> Unit,
-    stopPlaying: () -> Unit,
-    modifier: Modifier
-) {
-//    Row(
-//        horizontalArrangement = Arrangement.Center,
-//        modifier = modifier
-//            .fillMaxWidth()
-//    ) {
-//        IconButton(onClick = {
-//            if (!isPlaying) {
-//                startPlaying()
-//            } else {
-//                stopPlaying()
-//            }
-//        }) {
-//            Icon(
-//                painter = painterResource(
-//                    id = if (!isPlaying) R.drawable.baseline_play_arrow_24 else R.drawable.baseline_stop_24
-//                ),
-//                contentDescription = if (!isPlaying) "Start playing" else "Stop playing"
-//            )
-//        }
-
-    val amplitudes = listOf(100F, 200F, 300F, 400f, 1000F, 2000F, 15000F, 25000F, 30000F, 32767F)
-    AudioWaveFormAudioSeeker(amplitudes)
-//    }
 }
 
 @Composable
@@ -217,6 +166,51 @@ private fun AudioWaveFormAudioSeeker(amplitudes: List<Float>, modifier: Modifier
                 end = Offset(x = linePosition, y = size.height),
             )
         }
+    }
+}
+
+@Composable
+private fun PlaybackControl(
+    isRecording: Boolean,
+    startRecording: () -> Unit,
+    stopRecording: () -> Unit,
+    modifier: Modifier
+) {
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Color.Gray)
+    ) {
+        IconButton(onClick = {
+            if (!isRecording) {
+                startRecording()
+            } else {
+                stopRecording()
+            }
+        }) {
+            Icon(
+                painter = painterResource(
+                    id = if (!isRecording) R.drawable.baseline_mic_24 else R.drawable.baseline_mic_off_24
+                ),
+                contentDescription = if (!isRecording) "Start recording" else "Stop recording"
+            )
+        }
+        IconButton(onClick = {
+            if (!isRecording) {
+                startRecording()
+            } else {
+                stopRecording()
+            }
+        }) {
+            Icon(
+                painter = painterResource(
+                    id = if (!isRecording) R.drawable.baseline_play_arrow_24 else R.drawable.baseline_pause_24
+                ),
+                contentDescription = if (!isRecording) "Start playing" else "Stop playing"
+            )
+        }
+
     }
 }
 
