@@ -1,6 +1,5 @@
 package com.example.jimaku
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jimaku.player.AudioPlayer
@@ -34,21 +33,19 @@ class RecordingViewModel @Inject constructor(
     val isPlaying: StateFlow<Boolean> =
         _isPlaying.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-
+    private val _amplitudes: MutableStateFlow<List<Float>> = MutableStateFlow(emptyList())
+    val amplitudes: StateFlow<List<Float>> = _amplitudes
 
     fun startRecording(filePath: String) {
         _isRecording.value = true
         audioRecorder.record(filePath)
         viewModelScope.launch {
             while (_isRecording.value) {
-                Log.i(
-                    RecordingViewModel::class.simpleName,
-                    "Amplitude is ${audioRecorder.getAmplitude()}"
-                )
+                _amplitudes.value =
+                    amplitudes.value + listOf(audioRecorder.getAmplitude().toFloat())
                 delay(1000)
             }
         }
-
     }
 
     fun stopRecording() {
@@ -59,12 +56,10 @@ class RecordingViewModel @Inject constructor(
     fun startPlaying(audioPath: String) {
         _isPlaying.value = true
         audioPlayer.play(audioPath)
-
     }
 
     fun stopPlaying() {
         _isPlaying.value = false
         audioPlayer.stop()
-
     }
 }

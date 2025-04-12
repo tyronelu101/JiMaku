@@ -7,8 +7,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitHorizontalDragOrCancellation
+import androidx.compose.foundation.gestures.awaitHorizontalTouchSlopOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -28,6 +31,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,13 +56,14 @@ fun RecordingScreen(
 
     val isRecording: Boolean by viewModel.isRecording.collectAsStateWithLifecycle()
     val isPlaying: Boolean by viewModel.isPlaying.collectAsStateWithLifecycle()
-
+    val amplitudes: List<Float> by viewModel.amplitudes.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     Column(verticalArrangement = Arrangement.SpaceBetween, modifier = modifier.fillMaxSize()) {
         Captions(modifier = modifier)
         MediaController(
-            isRecording = false,
+            amplitudes = amplitudes,
+            isRecording = isRecording,
             onStartRecording = {
                 when (PackageManager.PERMISSION_GRANTED) {
                     ContextCompat.checkSelfPermission(
@@ -74,6 +79,7 @@ fun RecordingScreen(
                 }
             },
             onStopRecording = { viewModel.stopRecording() },
+            onPlay = { viewModel.startPlaying("${context.externalCacheDir!!.absolutePath}/testing.mp3") },
             modifier = modifier
         )
     }
@@ -84,7 +90,7 @@ private fun Captions(modifier: Modifier) {
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.7f)
+            .fillMaxHeight(0.8f)
             .background(Color.Blue)
     ) {
         item {
@@ -93,20 +99,29 @@ private fun Captions(modifier: Modifier) {
 }
 
 @Composable
+private fun Caption(text: String, timeStamp: String, modifier: Modifier) {
+    Column(modifier = modifier) {
+        Text(text = text)
+        Text(text = timeStamp)
+    }
+}
+
+@Composable
 private fun MediaController(
     isRecording: Boolean,
+    amplitudes: List<Float>,
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
+    onPlay: () -> Unit,
     modifier: Modifier
 ) {
     Column(modifier = modifier) {
-        val amplitudes =
-            listOf(100F, 200F, 300F, 400f, 1000F, 2000F, 15000F, 25000F, 30000F, 32767F)
         AudioWaveFormAudioSeeker(amplitudes)
         PlaybackControl(
             isRecording,
             startRecording = onStartRecording,
             stopRecording = onStopRecording,
+            onPlay = onPlay,
             modifier = modifier
         )
     }
@@ -121,14 +136,30 @@ private fun AudioWaveFormAudioSeeker(amplitudes: List<Float>, modifier: Modifier
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.10F)
+            .fillMaxHeight(0.3F)
             .pointerInput(Unit) {
-                detectTapGestures {
-                    Log.i("Test", "Tapping")
-                }
-                detectHorizontalDragGestures { change, dragAmount ->
-//                    linePosition = change.position.x
-                    Log.i("Test", "Dragging")
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    val downPointerId = down.id
+                    linePosition = down.position.x
+
+                    val touchSlopChange =
+                        awaitHorizontalTouchSlopOrCancellation(down.id) { change, _ ->
+                            Log.i("Test", "Touch slop reached.")
+                            change.consume()
+                        }
+                    Log.i("Test", "Touch slop is $touchSlopChange")
+
+                    if (touchSlopChange != null) {
+                        while (touchSlopChange.pressed) {
+                            val drag = awaitHorizontalDragOrCancellation(downPointerId) ?: break
+                            val deltaX = drag.positionChange().x
+                            drag.consume()
+                        }
+                        Log.i("Test", "Pointer up")
+                    } else {
+                        Log.i("Test", "Touch slop cancelled")
+                    }
                 }
             }
 
@@ -148,7 +179,6 @@ private fun AudioWaveFormAudioSeeker(amplitudes: List<Float>, modifier: Modifier
         amplitudes.forEach { amplitude ->
             val waveHeight = (amplitude / 32767f) * size.height
             val offsetY = (size.height - waveHeight) / 2
-            Log.i("Test", "Offset y is ${offsetY}")
 
             drawRect(
                 Color.White,
@@ -169,11 +199,16 @@ private fun AudioWaveFormAudioSeeker(amplitudes: List<Float>, modifier: Modifier
     }
 }
 
+//Sliding wave media playback
+//Ui for the captions
+//Integrating whisper local library
+
 @Composable
 private fun PlaybackControl(
     isRecording: Boolean,
     startRecording: () -> Unit,
     stopRecording: () -> Unit,
+    onPlay: () -> Unit,
     modifier: Modifier
 ) {
     Row(
@@ -196,13 +231,7 @@ private fun PlaybackControl(
                 contentDescription = if (!isRecording) "Start recording" else "Stop recording"
             )
         }
-        IconButton(onClick = {
-            if (!isRecording) {
-                startRecording()
-            } else {
-                stopRecording()
-            }
-        }) {
+        IconButton(onClick = { onPlay() }) {
             Icon(
                 painter = painterResource(
                     id = if (!isRecording) R.drawable.baseline_play_arrow_24 else R.drawable.baseline_pause_24
@@ -218,4 +247,10 @@ private fun PlaybackControl(
 @Composable
 fun AudioWaveFormPreview() {
     AudioWaveFormAudioSeeker(listOf(100F, 200F, 500F, 1000F))
+}
+
+@Preview
+@Composable
+private fun CaptionPreview() {
+    Caption("This is a caption", "1:49", Modifier)
 }
