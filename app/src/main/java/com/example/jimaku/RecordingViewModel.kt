@@ -42,8 +42,8 @@ class RecordingViewModel @Inject constructor(
         viewModelScope.launch {
             while (_isRecording.value) {
                 _amplitudes.value =
-                    amplitudes.value + listOf(audioRecorder.getAmplitude().toFloat())
-                delay(1000)
+                    amplitudes.value + listOf(audioRecorder.getAmplitude().toFloat() / 32767f)
+                delay(120)
             }
         }
     }

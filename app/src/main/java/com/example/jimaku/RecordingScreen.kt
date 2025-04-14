@@ -7,17 +7,17 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.awaitHorizontalDragOrCancellation
-import androidx.compose.foundation.gestures.awaitHorizontalTouchSlopOrCancellation
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -30,8 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -115,8 +113,8 @@ private fun MediaController(
     onPlay: () -> Unit,
     modifier: Modifier
 ) {
-    Column(modifier = modifier) {
-        AudioWaveFormAudioSeeker(amplitudes)
+    Column(modifier = modifier.fillMaxWidth()) {
+        AudioWaveFormAudioSeeker(amplitudes, modifier)
         PlaybackControl(
             isRecording,
             startRecording = onStartRecording,
@@ -129,72 +127,82 @@ private fun MediaController(
 
 @Composable
 private fun AudioWaveFormAudioSeeker(amplitudes: List<Float>, modifier: Modifier = Modifier) {
-    val gap = 6f.dp
-    var linePosition by remember {
+    val waveWidth = 2f
+    val gap = 5f
+    var verticalLinePosition by remember {
         mutableFloatStateOf(-1F)
     }
-    Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(0.3F)
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-                    val downPointerId = down.id
-                    linePosition = down.position.x
-
-                    val touchSlopChange =
-                        awaitHorizontalTouchSlopOrCancellation(down.id) { change, _ ->
-                            Log.i("Test", "Touch slop reached.")
-                            change.consume()
-                        }
-                    Log.i("Test", "Touch slop is $touchSlopChange")
-
-                    if (touchSlopChange != null) {
-                        while (touchSlopChange.pressed) {
-                            val drag = awaitHorizontalDragOrCancellation(downPointerId) ?: break
-                            val deltaX = drag.positionChange().x
-                            drag.consume()
-                        }
-                        Log.i("Test", "Pointer up")
-                    } else {
-                        Log.i("Test", "Touch slop cancelled")
-                    }
-                }
-            }
-
+    val scrollState = rememberScrollState()
+    Box(modifier = Modifier
+        .background(Color.Red)
+        .fillMaxHeight(0.3F)
+        .fillMaxWidth()
+        .horizontalScroll(scrollState)
     ) {
-        drawRect(
-            color = Color.Gray,
-            size = size
-        )
-        drawLine(
-            color = Color.Red,
-            strokeWidth = 1.dp.toPx(),
-            start = Offset(x = 0f, y = size.height / 2),
-            end = Offset(size.width, size.height / 2)
-        )
+        Canvas(
+            modifier = Modifier
+                .background(Color.Green)
+                .width((amplitudes.size * (gap + waveWidth)).dp)
+                .fillMaxHeight()
+//                .pointerInput(Unit) {
+//                    awaitEachGesture {
+//                        val down = awaitFirstDown()
+//                        val downPointerId = down.id
+//                        linePosition = down.position.x
+//
+//                        val touchSlopChange =
+//                            awaitHorizontalTouchSlopOrCancellation(down.id) { change, _ ->
+//                                Log.i("Test", "Touch slop reached.")
+//                                change.consume()
+//                            }
+//                        Log.i("Test", "Touch slop is $touchSlopChange")
+//
+//                        if (touchSlopChange != null) {
+//                            while (touchSlopChange.pressed) {
+//                                val drag = awaitHorizontalDragOrCancellation(downPointerId) ?: break
+//                                val deltaX = drag.positionChange().x
+//                                drag.consume()
+//                            }
+//                            Log.i("Test", "Pointer up")
+//                        } else {
+//                            Log.i("Test", "Touch slop cancelled")
+//                        }
+//                    }
+//                }
 
-        var currentOffsetX = 0F
-        amplitudes.forEach { amplitude ->
-            val waveHeight = (amplitude / 32767f) * size.height
-            val offsetY = (size.height - waveHeight) / 2
-
+        ) {
             drawRect(
-                Color.White,
-                topLeft = Offset(currentOffsetX, offsetY),
-                size = Size(5f.dp.toPx(), waveHeight)
+                color = Color.Gray,
+                size = size
             )
-            currentOffsetX += gap.toPx()
-        }
-        //Max amplitude: 32767
-        if (linePosition != -1F) {
             drawLine(
-                color = Color.Blue,
-                strokeWidth = 3.dp.toPx(),
-                start = Offset(x = linePosition, y = 0.dp.toPx()),
-                end = Offset(x = linePosition, y = size.height),
+                color = Color.Red,
+                strokeWidth = 1.dp.toPx(),
+                start = Offset(x = 0f, y = size.height / 2),
+                end = Offset(size.width, size.height / 2)
             )
+
+            var currentOffsetX = 0F
+            amplitudes.forEach { amplitude ->
+                val waveHeight = amplitude * size.height
+                val offsetY = (size.height - waveHeight) / 2
+
+                drawRect(
+                    Color.White,
+                    topLeft = Offset(currentOffsetX, offsetY),
+                    size = Size(waveWidth, waveHeight)
+                )
+                currentOffsetX += gap.dp.toPx()
+            }
+            //Max amplitude: 32767
+            if (verticalLinePosition != -1F) {
+                drawLine(
+                    color = Color.Blue,
+                    strokeWidth = 3.dp.toPx(),
+                    start = Offset(x = verticalLinePosition, y = 0.dp.toPx()),
+                    end = Offset(x = verticalLinePosition, y = size.height),
+                )
+            }
         }
     }
 }
