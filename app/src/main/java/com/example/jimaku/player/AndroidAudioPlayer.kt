@@ -1,43 +1,66 @@
 package com.example.jimaku.player
 
-import android.media.MediaPlayer
-import android.util.Log
-import java.io.IOException
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.AudioTrack
+import android.media.AudioTrack.MODE_STREAM
+import java.io.FileInputStream
 import javax.inject.Inject
 
 class AndroidAudioPlayer @Inject constructor() : AudioPlayer {
 
-    private var mediaPlayer: MediaPlayer? = null
+    private var audioPlayer: AudioTrack? = null
     private var listener: AudioPlayerListener? = null
 
+    private val buffer = AudioTrack.getMinBufferSize(
+        44123,
+        AudioFormat.CHANNEL_OUT_MONO,
+        AudioFormat.ENCODING_PCM_16BIT
+    )
+
     init {
-        mediaPlayer = MediaPlayer()
+        val audioAttributes = AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+            .build()
+        val audioFormat =
+            AudioFormat.Builder().setSampleRate(44123).setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                .setEncoding(AudioFormat.ENCODING_PCM_16BIT).build()
+        audioPlayer = AudioTrack(
+            audioAttributes, audioFormat,
+            buffer, MODE_STREAM, AudioManager.AUDIO_SESSION_ID_GENERATE
+        )
     }
 
     override fun play(audioPath: String) {
-        try {
+        val fileInputStream = FileInputStream(audioPath)
+        val pcmData = ByteArray(fileInputStream.available())
+        fileInputStream.read(pcmData)
+        fileInputStream.close()
 
-            mediaPlayer?.setDataSource(audioPath)
-            mediaPlayer?.prepare()
-            mediaPlayer?.start()
-        } catch (e: IOException) {
-            Log.e(AndroidAudioPlayer::class.simpleName, "Failed to play audio: $e")
+        audioPlayer?.play()
+        var offset = 0
+        var chunkSize: Int = buffer
+        while (offset < pcmData.size) {
+            chunkSize = Math.min(chunkSize, pcmData.size - offset)
+            audioPlayer?.write(pcmData, offset, chunkSize)
+            offset += chunkSize
         }
     }
 
     override fun pause() {
-        mediaPlayer?.pause()
+        audioPlayer?.pause()
     }
 
     override fun stop() {
-        mediaPlayer?.stop()
-        mediaPlayer?.release()
-        mediaPlayer = null
+        audioPlayer?.stop()
+        audioPlayer?.release()
+        audioPlayer = null
         listener = null
     }
 
     override fun seek(time: Int) {
-        mediaPlayer?.seekTo(time)
+//        audioPlayer?.seekTo(time)
     }
 
     override fun setOnProgressListener(listener: AudioPlayerListener) {

@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.jimaku.player.AudioPlayer
 import com.example.jimaku.recorder.AudioRecorder
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -38,14 +37,14 @@ class RecordingViewModel @Inject constructor(
 
     fun startRecording(filePath: String) {
         _isRecording.value = true
-        audioRecorder.record(filePath)
-        viewModelScope.launch {
-            while (_isRecording.value) {
-                _amplitudes.value =
-                    amplitudes.value + listOf(audioRecorder.getAmplitude().toFloat() / 32767f)
-                delay(120)
-            }
-        }
+        audioRecorder.record()
+//        viewModelScope.launch {
+//            while (_isRecording.value) {
+////                _amplitudes.value =
+////                    amplitudes.value + listOf(audioRecorder.getAmplitude().toFloat() / 32767f)
+////                delay(120)
+//            }
+//        }
     }
 
     fun stopRecording() {

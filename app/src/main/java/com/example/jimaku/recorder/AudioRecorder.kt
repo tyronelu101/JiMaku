@@ -1,8 +1,7 @@
 package com.example.jimaku.recorder
 
 interface AudioRecorder {
-    fun record(outputFile: String)
+    fun record()
     fun pause()
     fun stop()
-    fun getAmplitude(): Int
 }
