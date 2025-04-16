@@ -78,7 +78,7 @@ fun RecordingScreen(
             },
             onPauseRecording = { viewModel.pauseRecording() },
             onPlay = { viewModel.startPlaying("${context.filesDir}/testing.pcm") },
-            onPause = {viewModel.pausePlaying()},
+            onPause = { viewModel.pausePlaying() },
             modifier = modifier
         )
     }
@@ -211,10 +211,6 @@ private fun AudioWaveFormAudioSeeker(amplitudes: List<Float>, modifier: Modifier
     }
 }
 
-//Sliding wave media playback
-//Ui for the captions
-//Integrating whisper local library
-
 @Composable
 private fun PlaybackControl(
     audioRecorderUIState: AudioRecorderUIState,
@@ -224,6 +220,7 @@ private fun PlaybackControl(
     pauseAudio: () -> Unit,
     modifier: Modifier
 ) {
+    Log.i("Test", "UI state is ${audioRecorderUIState}")
     Row(
         horizontalArrangement = Arrangement.Center,
         modifier = modifier
@@ -239,18 +236,55 @@ private fun PlaybackControl(
                     startRecording,
                     modifier
                 )
+            }
+
+            AudioRecorderUIState.RecordingState.Recording -> {
+                AudioControlButton(
+                    R.drawable.baseline_mic_off_24,
+                    "Pause Recording",
+                    pauseRecording,
+                    modifier
+                )
+            }
+
+            AudioRecorderUIState.RecordingState.Paused -> {
                 AudioControlButton(
                     R.drawable.baseline_mic_24,
                     "Start Recording",
                     startRecording,
                     modifier
                 )
+                AudioControlButton(
+                    R.drawable.baseline_play_arrow_24,
+                    "Play audio",
+                    playAudio,
+                    modifier
+                )
             }
 
-            AudioRecorderUIState.RecordingState.Recording -> {}
-            AudioRecorderUIState.RecordingState.Paused -> {}
-            AudioRecorderUIState.PlaybackState.Playing -> {}
-            AudioRecorderUIState.PlaybackState.Paused -> {}
+            AudioRecorderUIState.PlaybackState.Playing -> {
+                AudioControlButton(
+                    R.drawable.baseline_pause_24,
+                    "Pause audio",
+                    pauseAudio,
+                    modifier
+                )
+            }
+
+            AudioRecorderUIState.PlaybackState.Paused -> {
+                AudioControlButton(
+                    R.drawable.baseline_mic_24,
+                    "Start recording",
+                    startRecording,
+                    modifier
+                )
+                AudioControlButton(
+                    R.drawable.baseline_play_arrow_24,
+                    "Play audio",
+                    playAudio,
+                    modifier
+                )
+            }
         }
     }
 }

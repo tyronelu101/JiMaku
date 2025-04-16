@@ -6,6 +6,9 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.media.AudioTrack.MODE_STREAM
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.FileInputStream
 import javax.inject.Inject
 
@@ -43,10 +46,13 @@ class AndroidAudioPlayer @Inject constructor() : AudioPlayer {
         audioPlayer?.play()
         var offset = 0
         var chunkSize: Int = buffer
-        while (offset < pcmData.size) {
-            chunkSize = Math.min(chunkSize, pcmData.size - offset)
-            audioPlayer?.write(pcmData, offset, chunkSize)
-            offset += chunkSize
+        CoroutineScope(Dispatchers.IO).launch {
+            while (offset < pcmData.size) {
+                chunkSize = Math.min(chunkSize, pcmData.size - offset)
+                audioPlayer?.write(pcmData, offset, chunkSize)
+                offset += chunkSize
+            }
+            Log.i("Test", "Audio playback complete")
         }
     }
 
