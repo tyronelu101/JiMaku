@@ -1,4 +1,4 @@
-package com.example.jimaku
+package com.example.jimaku.recording
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.jimaku.R
 
 @Composable
 fun RecordingScreen(
@@ -52,8 +53,7 @@ fun RecordingScreen(
             }
         }
 
-    val isRecording: Boolean by viewModel.isRecording.collectAsStateWithLifecycle()
-    val isPlaying: Boolean by viewModel.isPlaying.collectAsStateWithLifecycle()
+    val audioRecorderUIState: AudioRecorderUIState by viewModel.audioRecorderUIState.collectAsStateWithLifecycle()
     val amplitudes: List<Float> by viewModel.amplitudes.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -61,7 +61,7 @@ fun RecordingScreen(
         Captions(modifier = modifier)
         MediaController(
             amplitudes = amplitudes,
-            isRecording = isRecording,
+            audioRecorderUIState = audioRecorderUIState,
             onStartRecording = {
                 when (PackageManager.PERMISSION_GRANTED) {
                     ContextCompat.checkSelfPermission(
@@ -76,8 +76,9 @@ fun RecordingScreen(
                     }
                 }
             },
-            onStopRecording = { viewModel.stopRecording() },
+            onPauseRecording = { viewModel.pauseRecording() },
             onPlay = { viewModel.startPlaying("${context.filesDir}/testing.pcm") },
+            onPause = {viewModel.pausePlaying()},
             modifier = modifier
         )
     }
@@ -106,20 +107,22 @@ private fun Caption(text: String, timeStamp: String, modifier: Modifier) {
 
 @Composable
 private fun MediaController(
-    isRecording: Boolean,
+    audioRecorderUIState: AudioRecorderUIState,
     amplitudes: List<Float>,
     onStartRecording: () -> Unit,
-    onStopRecording: () -> Unit,
+    onPauseRecording: () -> Unit,
     onPlay: () -> Unit,
+    onPause: () -> Unit,
     modifier: Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         AudioWaveFormAudioSeeker(amplitudes, modifier)
         PlaybackControl(
-            isRecording,
+            audioRecorderUIState,
             startRecording = onStartRecording,
-            stopRecording = onStopRecording,
-            onPlay = onPlay,
+            pauseRecording = onPauseRecording,
+            playAudio = onPlay,
+            pauseAudio = onPause,
             modifier = modifier
         )
     }
@@ -133,11 +136,12 @@ private fun AudioWaveFormAudioSeeker(amplitudes: List<Float>, modifier: Modifier
         mutableFloatStateOf(-1F)
     }
     val scrollState = rememberScrollState()
-    Box(modifier = Modifier
-        .background(Color.Red)
-        .fillMaxHeight(0.3F)
-        .fillMaxWidth()
-        .horizontalScroll(scrollState)
+    Box(
+        modifier = Modifier
+            .background(Color.Red)
+            .fillMaxHeight(0.3F)
+            .fillMaxWidth()
+            .horizontalScroll(scrollState)
     ) {
         Canvas(
             modifier = Modifier
@@ -213,10 +217,11 @@ private fun AudioWaveFormAudioSeeker(amplitudes: List<Float>, modifier: Modifier
 
 @Composable
 private fun PlaybackControl(
-    isRecording: Boolean,
+    audioRecorderUIState: AudioRecorderUIState,
     startRecording: () -> Unit,
-    stopRecording: () -> Unit,
-    onPlay: () -> Unit,
+    pauseRecording: () -> Unit,
+    playAudio: () -> Unit,
+    pauseAudio: () -> Unit,
     modifier: Modifier
 ) {
     Row(
@@ -225,29 +230,46 @@ private fun PlaybackControl(
             .fillMaxWidth()
             .background(Color.Gray)
     ) {
-        IconButton(onClick = {
-            if (!isRecording) {
-                startRecording()
-            } else {
-                stopRecording()
-            }
-        }) {
-            Icon(
-                painter = painterResource(
-                    id = if (!isRecording) R.drawable.baseline_mic_24 else R.drawable.baseline_mic_off_24
-                ),
-                contentDescription = if (!isRecording) "Start recording" else "Stop recording"
-            )
-        }
-        IconButton(onClick = { onPlay() }) {
-            Icon(
-                painter = painterResource(
-                    id = if (!isRecording) R.drawable.baseline_play_arrow_24 else R.drawable.baseline_pause_24
-                ),
-                contentDescription = if (!isRecording) "Start playing" else "Stop playing"
-            )
-        }
 
+        when (audioRecorderUIState) {
+            AudioRecorderUIState.Idle -> {
+                AudioControlButton(
+                    R.drawable.baseline_mic_24,
+                    "Start Recording",
+                    startRecording,
+                    modifier
+                )
+                AudioControlButton(
+                    R.drawable.baseline_mic_24,
+                    "Start Recording",
+                    startRecording,
+                    modifier
+                )
+            }
+
+            AudioRecorderUIState.RecordingState.Recording -> {}
+            AudioRecorderUIState.RecordingState.Paused -> {}
+            AudioRecorderUIState.PlaybackState.Playing -> {}
+            AudioRecorderUIState.PlaybackState.Paused -> {}
+        }
+    }
+}
+
+
+@Composable
+private fun AudioControlButton(
+    iconResource: Int,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier
+) {
+    IconButton(onClick = { onClick() }) {
+        Icon(
+            painter = painterResource(
+                id = iconResource
+            ),
+            contentDescription = contentDescription
+        )
     }
 }
 

@@ -1,4 +1,4 @@
-package com.example.jimaku.player
+package com.example.jimaku.domain.player
 
 import android.media.AudioAttributes
 import android.media.AudioFormat

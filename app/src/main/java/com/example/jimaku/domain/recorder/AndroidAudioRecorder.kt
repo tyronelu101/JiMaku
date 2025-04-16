@@ -1,4 +1,4 @@
-package com.example.jimaku.recorder
+package com.example.jimaku.domain.recorder
 
 import android.Manifest
 import android.content.Context

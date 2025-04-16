@@ -1,9 +1,9 @@
-package com.example.jimaku
+package com.example.jimaku.di
 
-import com.example.jimaku.player.AndroidAudioPlayer
-import com.example.jimaku.player.AudioPlayer
-import com.example.jimaku.recorder.AndroidAudioRecorder
-import com.example.jimaku.recorder.AudioRecorder
+import com.example.jimaku.domain.player.AndroidAudioPlayer
+import com.example.jimaku.domain.player.AudioPlayer
+import com.example.jimaku.domain.recorder.AndroidAudioRecorder
+import com.example.jimaku.domain.recorder.AudioRecorder
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

@@ -1,4 +1,4 @@
-package com.example.jimaku.recorder
+package com.example.jimaku.domain.recorder
 
 interface AudioRecorder {
     fun record()

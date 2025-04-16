@@ -1,4 +1,4 @@
-package com.example.jimaku.player
+package com.example.jimaku.domain.player
 
 interface AudioPlayer {
     fun play(audioPath: String)
