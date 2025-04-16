@@ -5,6 +5,7 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import android.media.AudioTrack.MODE_STREAM
+import android.util.Log
 import java.io.FileInputStream
 import javax.inject.Inject
 
@@ -14,7 +15,7 @@ class AndroidAudioPlayer @Inject constructor() : AudioPlayer {
     private var listener: AudioPlayerListener? = null
 
     private val buffer = AudioTrack.getMinBufferSize(
-        44123,
+        44100,
         AudioFormat.CHANNEL_OUT_MONO,
         AudioFormat.ENCODING_PCM_16BIT
     )
@@ -24,7 +25,7 @@ class AndroidAudioPlayer @Inject constructor() : AudioPlayer {
             .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
             .build()
         val audioFormat =
-            AudioFormat.Builder().setSampleRate(44123).setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+            AudioFormat.Builder().setSampleRate(44100).setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
                 .setEncoding(AudioFormat.ENCODING_PCM_16BIT).build()
         audioPlayer = AudioTrack(
             audioAttributes, audioFormat,
@@ -37,6 +38,7 @@ class AndroidAudioPlayer @Inject constructor() : AudioPlayer {
         val pcmData = ByteArray(fileInputStream.available())
         fileInputStream.read(pcmData)
         fileInputStream.close()
+        Log.i("Test", "Data is ${pcmData}")
 
         audioPlayer?.play()
         var offset = 0

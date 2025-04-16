@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -17,14 +16,17 @@ import javax.inject.Inject
 
 class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val context: Context) :
     AudioRecorder {
-    private var isRecording = false
-    private var recorder: AudioRecord? = null
+
+    private val sampleRate = 44100
+    private val audioEncoding = AudioFormat.ENCODING_PCM_16BIT
     private val bufferSize = AudioRecord.getMinBufferSize(
-        44123,
+        sampleRate,
         AudioFormat.CHANNEL_IN_MONO,
-        AudioFormat.ENCODING_PCM_16BIT
+        audioEncoding
     )
 
+    private var isRecording = false
+    private var recorder: AudioRecord? = null
 
     override fun record() {
         if (ActivityCompat.checkSelfPermission(
@@ -36,27 +38,26 @@ class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val c
         }
         recorder = AudioRecord(
             MediaRecorder.AudioSource.MIC,
-            44123,
+            sampleRate,
             AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT,
+            audioEncoding,
             bufferSize
         )
 
         recorder?.startRecording()
         isRecording = true
 
-        val audioBuffer = ByteArray(bufferSize)
-        val outputFile = FileOutputStream("${context.filesDir}/test.pcm")
+        val audioBuffer = ByteArray(bufferSize * 2)
+        val outputFile = FileOutputStream("${context.filesDir}/testing.pcm")
         CoroutineScope(Dispatchers.IO).launch {
             while (isRecording) {
-                val data = recorder?.read(audioBuffer, 0, bufferSize) ?: 0
-                Log.i("Test", "Data is ${data}")
-//                if (data > 0) {
-//                    outputFile.use { output ->
-//                        output.write(data)
-//                    }
-//                }
+                val data = recorder?.read(audioBuffer, 0, bufferSize * 2) ?: 0
+                if (data > 0) {
+                    outputFile.write(audioBuffer)
+                }
             }
+            outputFile.flush()
+            outputFile.close()
         }
     }
 

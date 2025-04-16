@@ -77,7 +77,7 @@ fun RecordingScreen(
                 }
             },
             onStopRecording = { viewModel.stopRecording() },
-            onPlay = { viewModel.startPlaying("${context.externalCacheDir!!.absolutePath}/testing.mp3") },
+            onPlay = { viewModel.startPlaying("${context.filesDir}/testing.pcm") },
             modifier = modifier
         )
     }
