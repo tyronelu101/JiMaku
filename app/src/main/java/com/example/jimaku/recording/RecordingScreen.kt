@@ -98,10 +98,10 @@ private fun Captions(modifier: Modifier) {
 }
 
 @Composable
-private fun Caption(text: String, timeStamp: String, modifier: Modifier) {
+private fun Caption(timeStamp: String, text: String, modifier: Modifier) {
     Column(modifier = modifier) {
-        Text(text = text)
         Text(text = timeStamp)
+        Text(text = text)
     }
 }
 
@@ -316,5 +316,5 @@ fun AudioWaveFormPreview() {
 @Preview
 @Composable
 private fun CaptionPreview() {
-    Caption("This is a caption", "1:49", Modifier)
+    Caption("1:49", "This is a caption", Modifier)
 }

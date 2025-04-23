@@ -68,7 +68,6 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.jetbrains.kotlinx.serialization.json)
-
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
 
