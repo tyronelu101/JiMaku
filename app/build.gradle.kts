@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.jetbrains.kotlinx.serialization.json)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.material3.adaptive.navigation.suite.android)
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.google.dagger.hilt)

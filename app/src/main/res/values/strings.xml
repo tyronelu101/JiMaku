@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">JiMaku</string>
+    <string name="home">Home</string>
+    <string name="files">Files</string>
+
 </resources>
