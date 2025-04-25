@@ -1,5 +1,7 @@
 package com.example.captionstudio.studio
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -41,7 +45,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class StudioRoute(val mode: StudioMode)
 
-fun NavController.navigateToRecording(navOptions: NavOptions) = navigate(route = StudioRoute, navOptions)
+fun NavController.navigateToRecording(navOptions: NavOptions) =
+    navigate(route = StudioRoute, navOptions)
 
 enum class StudioMode {
     RECORDING, AUDIO, STREAM
@@ -54,13 +59,26 @@ fun StudioScreen(
 ) {
     val audioRecorderUIState: AudioRecorderUIState by viewModel.audioRecorderUIState.collectAsStateWithLifecycle()
     val amplitudes: List<Float> by viewModel.amplitudes.collectAsStateWithLifecycle()
-    StudioScreen(amplitudes, audioRecorderUIState, modifier)
+    val context = LocalContext.current
+    StudioScreen(
+        amplitudes,
+        audioRecorderUIState,
+        startRecording = { viewModel.startRecording("${context.externalCacheDir!!.absolutePath}/testing.mp3") },
+        pauseRecording = { viewModel.pauseRecording() },
+        onPlay = { viewModel.startPlaying("${context.externalCacheDir!!.absolutePath}/testing.mp3}") },
+        onPause = { viewModel.pausePlaying() },
+        modifier
+    )
 }
 
 @Composable
 private fun StudioScreen(
     amplitudes: List<Float>,
     audioRecorderUIState: AudioRecorderUIState,
+    startRecording: () -> Unit,
+    pauseRecording: () -> Unit,
+    onPlay: () -> Unit,
+    onPause: () -> Unit,
     modifier: Modifier
 ) {
     val launcher =
@@ -73,32 +91,34 @@ private fun StudioScreen(
         }
 
     val context = LocalContext.current
+    Column(verticalArrangement = Arrangement.SpaceBetween, modifier = modifier.fillMaxSize()) {
 
-//    Column(verticalArrangement = Arrangement.SpaceBetween, modifier = modifier.fillMaxSize()) {
-//        Captions(modifier = modifier)
-//        MediaController(
-//            amplitudes = amplitudes,
-//            audioRecorderUIState = audioRecorderUIState,
-//            onStartRecording = {
-//                when (PackageManager.PERMISSION_GRANTED) {
-//                    ContextCompat.checkSelfPermission(
-//                        context,
-//                        Manifest.permission.RECORD_AUDIO
-//                    ) -> {
-//                        viewModel.startRecording("${context.externalCacheDir!!.absolutePath}/testing.mp3")
-//                    }
-//
-//                    else -> {
-//                        launcher.launch(Manifest.permission.RECORD_AUDIO)
-//                    }
-//                }
-//            },
-//            onPauseRecording = { viewModel.pauseRecording() },
-//            onPlay = { viewModel.startPlaying("${context.filesDir}/testing.pcm") },
-//            onPause = { viewModel.pausePlaying() },
-//            modifier = modifier
-//        )
-//    }
+        AudioWaveFormAudioSeeker(amplitudes = amplitudes)
+        Captions(modifier = modifier)
+        MediaController(
+            audioRecorderUIState = audioRecorderUIState,
+            onStartRecording = {
+                when (PackageManager.PERMISSION_GRANTED) {
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.RECORD_AUDIO
+                    ) -> {
+                        startRecording()
+                    }
+
+                    else -> {
+                        launcher.launch(Manifest.permission.RECORD_AUDIO)
+                    }
+                }
+            },
+            onPauseRecording = { pauseRecording() },
+            onPlay = { onPlay() },
+            onPause = { onPause() },
+            modifier = modifier
+        )
+
+
+    }
 }
 
 @Composable
@@ -125,7 +145,6 @@ private fun Caption(timeStamp: String, text: String, modifier: Modifier) {
 @Composable
 private fun MediaController(
     audioRecorderUIState: AudioRecorderUIState,
-    amplitudes: List<Float>,
     onStartRecording: () -> Unit,
     onPauseRecording: () -> Unit,
     onPlay: () -> Unit,
@@ -133,7 +152,6 @@ private fun MediaController(
     modifier: Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        AudioWaveFormAudioSeeker(amplitudes, modifier)
         PlaybackControl(
             audioRecorderUIState,
             startRecording = onStartRecording,
