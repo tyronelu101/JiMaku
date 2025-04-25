@@ -20,11 +20,10 @@ import com.example.captionstudio.app.navigation.TopLevelDestinations
 fun App(appState: AppState, modifier: Modifier = Modifier) {
 
     val currentDestination = appState.currentDestination
-    Log.i("Test", "Current destination is ${currentDestination}")
     NavigationSuiteScaffold(
         navigationSuiteItems = {
             TopLevelDestinations.entries.forEach { topLevelDestination ->
-//                val isSelected = currentDestination.hierarchy.any{it.hasRoute(topLevelDestination.route)}
+                val isSelected = currentDestination?.hierarchy?.any{it.hasRoute(topLevelDestination.route)} ?: false
                 item(
                     icon = {
                         Icon(
@@ -33,7 +32,7 @@ fun App(appState: AppState, modifier: Modifier = Modifier) {
                         )
                     },
                     label = { Text(text = stringResource(id = topLevelDestination.label)) },
-                    selected = false,
+                    selected = isSelected,
                     onClick = { appState.navigateToTopLevelDestination(topLevelDestination) }
                 )
             }
