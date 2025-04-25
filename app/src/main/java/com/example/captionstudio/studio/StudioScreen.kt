@@ -39,23 +39,26 @@ import com.example.captionstudio.R
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object Record
+data class StudioRoute(val mode: StudioMode)
 
-fun NavController.navigateToRecording(navOptions: NavOptions) = navigate(route = Record, navOptions)
+fun NavController.navigateToRecording(navOptions: NavOptions) = navigate(route = StudioRoute, navOptions)
 
+enum class StudioMode {
+    RECORDING, AUDIO, STREAM
+}
 
 @Composable
-fun RecordingRoute(
+fun StudioScreen(
     modifier: Modifier = Modifier,
     viewModel: RecordingViewModel = hiltViewModel()
 ) {
     val audioRecorderUIState: AudioRecorderUIState by viewModel.audioRecorderUIState.collectAsStateWithLifecycle()
     val amplitudes: List<Float> by viewModel.amplitudes.collectAsStateWithLifecycle()
-    RecordingScreen(amplitudes, audioRecorderUIState, modifier)
+    StudioScreen(amplitudes, audioRecorderUIState, modifier)
 }
 
 @Composable
-private fun RecordingScreen(
+private fun StudioScreen(
     amplitudes: List<Float>,
     audioRecorderUIState: AudioRecorderUIState,
     modifier: Modifier

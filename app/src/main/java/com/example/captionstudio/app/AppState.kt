@@ -2,17 +2,15 @@ package com.example.captionstudio.app
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import com.example.captionstudio.app.navigation.TopLevelDestinations
 import com.example.captionstudio.app.navigation.TopLevelDestinations.*
-import com.example.captionstudio.audiosource.AudioRoute
+import com.example.captionstudio.audiosource.StudioModeRoute
 import com.example.captionstudio.transcriptions.TranscriptionsRoute
 
 
@@ -40,7 +38,7 @@ class AppState(val navController: NavHostController) {
         }
 
         when (topLevelDestination) {
-            AUDIO_SOURCE -> navController.navigate(AudioRoute, topLevelNavOptions)
+            AUDIO_SOURCE -> navController.navigate(StudioModeRoute, topLevelNavOptions)
             TRANSCRIPTIONS -> navController.navigate(TranscriptionsRoute, topLevelNavOptions)
         }
     }

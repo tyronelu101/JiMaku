@@ -9,34 +9,40 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.captionstudio.studio.StudioMode
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object AudioRoute
+data object StudioModeRoute
 
 @Composable
-fun AudioSourceScreen(
+fun StudioModeScreen(
+    onStudioModeClick: (studioMode: StudioMode) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AudioSourceViewModel = hiltViewModel()
 ) {
-    AudioSourceScreen(modifier)
+    StudioModeScreen(onStudioModeClick, modifier)
 }
 
 @Composable
-private fun AudioSourceScreen(modifier: Modifier) {
+private fun StudioModeScreen(
+    onStudioModeClick: (studioMode: StudioMode) -> Unit,
+    modifier: Modifier
+) {
 
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxSize()
     ) {
-        Button(onClick = {}) { Text("Record") }
-        Button(onClick = {}) { Text("Audio") }
+        Button(onClick = { onStudioModeClick(StudioMode.RECORDING) }) { Text("Record") }
+        Button(onClick = { onStudioModeClick(StudioMode.AUDIO) }) { Text("Audio") }
+        Button(onClick = { onStudioModeClick(StudioMode.STREAM) }) { Text("Stream") }
     }
 
 }
 
 @Composable
 fun HomeScreenPreview() {
-    AudioSourceScreen(modifier = Modifier)
+    StudioModeScreen({}, modifier = Modifier)
 }

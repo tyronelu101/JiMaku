@@ -1,7 +1,9 @@
 package com.example.captionstudio.studio
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.example.captionstudio.domain.player.AudioPlayer
 import com.example.captionstudio.domain.recorder.AudioRecorder
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,8 +29,11 @@ sealed class AudioRecorderUIState {
 @HiltViewModel
 class RecordingViewModel @Inject constructor(
     private val audioRecorder: AudioRecorder,
-    private val audioPlayer: AudioPlayer
+    private val audioPlayer: AudioPlayer,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val profile = savedStateHandle.toRoute<StudioRoute>()
 
     private val _audioRecorderUIState: MutableStateFlow<AudioRecorderUIState> =
         MutableStateFlow(AudioRecorderUIState.Idle)
@@ -38,7 +43,6 @@ class RecordingViewModel @Inject constructor(
             SharingStarted.WhileSubscribed(5000),
             AudioRecorderUIState.Idle
         )
-
 
     private val _amplitudes: MutableStateFlow<List<Float>> = MutableStateFlow(emptyList())
     val amplitudes: StateFlow<List<Float>> = _amplitudes
