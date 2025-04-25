@@ -1,5 +1,6 @@
 package com.example.captionstudio.app
 
+import android.util.Log
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
@@ -16,17 +17,14 @@ import com.example.captionstudio.app.navigation.TopLevelDestinations
 
 
 @Composable
-fun App(modifier: Modifier = Modifier) {
-    val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
+fun App(appState: AppState, modifier: Modifier = Modifier) {
 
+    val currentDestination = appState.currentDestination
+    Log.i("Test", "Current destination is ${currentDestination}")
     NavigationSuiteScaffold(
         navigationSuiteItems = {
             TopLevelDestinations.entries.forEach { topLevelDestination ->
-                val isSelected =
-                    currentDestination?.hierarchy?.any { it.hasRoute(topLevelDestination.route::class) }
-                        ?: false
+//                val isSelected = currentDestination.hierarchy.any{it.hasRoute(topLevelDestination.route)}
                 item(
                     icon = {
                         Icon(
@@ -35,13 +33,13 @@ fun App(modifier: Modifier = Modifier) {
                         )
                     },
                     label = { Text(text = stringResource(id = topLevelDestination.label)) },
-                    selected = isSelected,
-                    onClick = { navController.navigate(topLevelDestination.route) }
+                    selected = false,
+                    onClick = { appState.navigateToTopLevelDestination(topLevelDestination) }
                 )
             }
         }
     ) {
-        CaptionStudioNavHost(navController = navController)
+        CaptionStudioNavHost(navController = appState.navController)
     }
 }
 

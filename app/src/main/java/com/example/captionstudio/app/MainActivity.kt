@@ -16,8 +16,9 @@ class MainActivity : ComponentActivity() {
 
 //        enableEdgeToEdge()
         setContent {
+            val appState = rememberAppState()
             CaptionStudioTheme {
-                App(modifier = Modifier)
+                App(appState)
             }
         }
     }
