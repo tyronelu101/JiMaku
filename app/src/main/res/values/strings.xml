@@ -1,6 +1,5 @@
 <resources>
-    <string name="app_name">JiMaku</string>
-    <string name="home">Home</string>
-    <string name="files">Files</string>
-
+    <string name="app_name">Caption Studio</string>
+    <string name="audio_source">Audio Source</string>
+    <string name="transcriptions">Transcriptions</string>
 </resources>

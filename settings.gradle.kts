@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "JiMaku"
+rootProject.name = "CaptionStudio"
 include(":app")
  

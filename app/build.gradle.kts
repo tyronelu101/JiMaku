@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.jimaku"
+    namespace = "com.example.captionstudio"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.jimaku"
+        applicationId = "com.example.captionstudio"
         minSdk = 23
         targetSdk = 35
         versionCode = 1
@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui.ui)
+    implementation (libs.androidx.material.icons.extended)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.graphics.shapes)
@@ -71,7 +72,6 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.material3.adaptive.navigation.suite.android)
     ksp(libs.androidx.room.compiler)
-
     implementation(libs.google.dagger.hilt)
     ksp(libs.google.dagger.hilt.compiler)
 
