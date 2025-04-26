@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -23,12 +24,16 @@ fun rememberAppState(navController: NavHostController = rememberNavController())
 
 class AppState(val navController: NavHostController) {
 
-    val currentDestination: NavDestination?
+    val currentNavDestination: NavDestination?
         @Composable get() {
             val currentEntry = navController.currentBackStackEntryFlow.collectAsState(null)
             return currentEntry.value?.destination
         }
 
+    val currentTopLevelDestination: TopLevelDestinations?
+        @Composable get() = TopLevelDestinations.entries.firstOrNull {
+            currentNavDestination?.hasRoute(route = it.route) == true
+        }
 
     fun navigateToTopLevelDestination(topLevelDestination: TopLevelDestinations) {
         val topLevelNavOptions = navOptions {
