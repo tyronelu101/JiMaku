@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -26,27 +27,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavOptions
 import com.example.captionstudio.R
+import com.example.captionstudio.app.ui.CaptionStudioIcons
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class StudioRoute(val mode: StudioMode)
-
-fun NavController.navigateToRecording(navOptions: NavOptions) =
-    navigate(route = StudioRoute, navOptions)
 
 enum class StudioMode {
     RECORDING, AUDIO, STREAM
@@ -57,12 +56,12 @@ fun StudioScreen(
     modifier: Modifier = Modifier,
     viewModel: RecordingViewModel = hiltViewModel()
 ) {
-    val audioRecorderUIState: AudioRecorderUIState by viewModel.audioRecorderUIState.collectAsStateWithLifecycle()
+    val studioUIState: StudioUIState by viewModel.studioUIState.collectAsStateWithLifecycle()
     val amplitudes: List<Float> by viewModel.amplitudes.collectAsStateWithLifecycle()
     val context = LocalContext.current
     StudioScreen(
         amplitudes,
-        audioRecorderUIState,
+        studioUIState,
         startRecording = { viewModel.startRecording("${context.externalCacheDir!!.absolutePath}/testing.mp3") },
         pauseRecording = { viewModel.pauseRecording() },
         onPlay = { viewModel.startPlaying("${context.externalCacheDir!!.absolutePath}/testing.mp3}") },
@@ -74,7 +73,7 @@ fun StudioScreen(
 @Composable
 private fun StudioScreen(
     amplitudes: List<Float>,
-    audioRecorderUIState: AudioRecorderUIState,
+    studioUIState: StudioUIState,
     startRecording: () -> Unit,
     pauseRecording: () -> Unit,
     onPlay: () -> Unit,
@@ -91,12 +90,25 @@ private fun StudioScreen(
         }
 
     val context = LocalContext.current
-    Column(verticalArrangement = Arrangement.SpaceBetween, modifier = modifier.fillMaxSize()) {
-
-        AudioWaveFormAudioSeeker(amplitudes = amplitudes)
-        Captions(modifier = modifier)
-        MediaController(
-            audioRecorderUIState = audioRecorderUIState,
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Green)
+    ) {
+        AudioWaveFormSeeker(
+            amplitudes = amplitudes, modifier
+                .fillMaxWidth()
+                .weight(3f)
+                .background(Color.Red)
+        )
+        Captions(
+            modifier = modifier
+                .fillMaxWidth()
+                .weight(4f)
+                .background(Color.Blue)
+        )
+        StudioController(
+            studioUIState = studioUIState,
             onStartRecording = {
                 when (PackageManager.PERMISSION_GRANTED) {
                     ContextCompat.checkSelfPermission(
@@ -115,9 +127,10 @@ private fun StudioScreen(
             onPlay = { onPlay() },
             onPause = { onPause() },
             modifier = modifier
+                .fillMaxWidth()
+                .weight(3f)
+                .background(Color.Gray)
         )
-
-
     }
 }
 
@@ -125,9 +138,6 @@ private fun StudioScreen(
 private fun Captions(modifier: Modifier) {
     LazyColumn(
         modifier = modifier
-            .fillMaxWidth()
-            .fillMaxHeight(0.8f)
-            .background(Color.Blue)
     ) {
         item {
         }
@@ -143,28 +153,32 @@ private fun Caption(timeStamp: String, text: String, modifier: Modifier) {
 }
 
 @Composable
-private fun MediaController(
-    audioRecorderUIState: AudioRecorderUIState,
+private fun StudioController(
+    studioUIState: StudioUIState,
     onStartRecording: () -> Unit,
     onPauseRecording: () -> Unit,
     onPlay: () -> Unit,
     onPause: () -> Unit,
     modifier: Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        PlaybackControl(
-            audioRecorderUIState,
-            startRecording = onStartRecording,
-            pauseRecording = onPauseRecording,
-            playAudio = onPlay,
-            pauseAudio = onPause,
-            modifier = modifier
-        )
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        IconButton(onClick = {}) {
+            Icon(CaptionStudioIcons.CLOSE, contentDescription = stringResource(R.string.close))
+        }
+        Button(onClick = {}) { Text("Record") }
+        Button(onClick = {}) { Text("Play") }
+        IconButton(onClick = {}) {
+            Icon(CaptionStudioIcons.CHECK, contentDescription = stringResource(R.string.check))
+        }
     }
 }
 
 @Composable
-private fun AudioWaveFormAudioSeeker(amplitudes: List<Float>, modifier: Modifier = Modifier) {
+private fun AudioWaveFormSeeker(amplitudes: List<Float>, modifier: Modifier = Modifier) {
     val waveWidth = 2f
     val gap = 5f
     var verticalLinePosition by remember {
@@ -172,17 +186,12 @@ private fun AudioWaveFormAudioSeeker(amplitudes: List<Float>, modifier: Modifier
     }
     val scrollState = rememberScrollState()
     Box(
-        modifier = Modifier
-            .background(Color.Red)
-            .fillMaxHeight(0.3F)
-            .fillMaxWidth()
-            .horizontalScroll(scrollState)
+        modifier = modifier.horizontalScroll(scrollState)
     ) {
         Canvas(
             modifier = Modifier
                 .background(Color.Green)
                 .width((amplitudes.size * (gap + waveWidth)).dp)
-                .fillMaxHeight()
 //                .pointerInput(Unit) {
 //                    awaitEachGesture {
 //                        val down = awaitFirstDown()
@@ -247,85 +256,6 @@ private fun AudioWaveFormAudioSeeker(amplitudes: List<Float>, modifier: Modifier
 }
 
 @Composable
-private fun PlaybackControl(
-    audioRecorderUIState: AudioRecorderUIState,
-    startRecording: () -> Unit,
-    pauseRecording: () -> Unit,
-    playAudio: () -> Unit,
-    pauseAudio: () -> Unit,
-    modifier: Modifier
-) {
-    Log.i("Test", "UI state is ${audioRecorderUIState}")
-    Row(
-        horizontalArrangement = Arrangement.Center,
-        modifier = modifier
-            .fillMaxWidth()
-            .background(Color.Gray)
-    ) {
-
-        when (audioRecorderUIState) {
-            AudioRecorderUIState.Idle -> {
-                AudioControlButton(
-                    R.drawable.baseline_mic_24,
-                    "Start Recording",
-                    startRecording,
-                    modifier
-                )
-            }
-
-            AudioRecorderUIState.RecordingState.Recording -> {
-                AudioControlButton(
-                    R.drawable.baseline_mic_off_24,
-                    "Pause Recording",
-                    pauseRecording,
-                    modifier
-                )
-            }
-
-            AudioRecorderUIState.RecordingState.Paused -> {
-                AudioControlButton(
-                    R.drawable.baseline_mic_24,
-                    "Start Recording",
-                    startRecording,
-                    modifier
-                )
-                AudioControlButton(
-                    R.drawable.baseline_play_arrow_24,
-                    "Play audio",
-                    playAudio,
-                    modifier
-                )
-            }
-
-            AudioRecorderUIState.PlaybackState.Playing -> {
-                AudioControlButton(
-                    R.drawable.baseline_pause_24,
-                    "Pause audio",
-                    pauseAudio,
-                    modifier
-                )
-            }
-
-            AudioRecorderUIState.PlaybackState.Paused -> {
-                AudioControlButton(
-                    R.drawable.baseline_mic_24,
-                    "Start recording",
-                    startRecording,
-                    modifier
-                )
-                AudioControlButton(
-                    R.drawable.baseline_play_arrow_24,
-                    "Play audio",
-                    playAudio,
-                    modifier
-                )
-            }
-        }
-    }
-}
-
-
-@Composable
 private fun AudioControlButton(
     iconResource: Int,
     contentDescription: String,
@@ -345,7 +275,7 @@ private fun AudioControlButton(
 @Preview
 @Composable
 fun AudioWaveFormPreview() {
-    AudioWaveFormAudioSeeker(listOf(100F, 200F, 500F, 1000F))
+    AudioWaveFormSeeker(listOf(100F, 200F, 500F, 1000F))
 }
 
 @Preview

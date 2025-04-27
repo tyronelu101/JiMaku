@@ -13,14 +13,22 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
-sealed class AudioRecorderUIState {
-    data object Idle : AudioRecorderUIState()
-    sealed class RecordingState : AudioRecorderUIState() {
+sealed interface PlaybackState {
+
+}
+
+sealed interface RecordingState {
+
+}
+
+sealed interface StudioUIState {
+    data object Idle : StudioUIState
+    sealed class RecordingState : StudioUIState{
         data object Recording : RecordingState()
         data object Paused : RecordingState()
     }
 
-    sealed class PlaybackState : AudioRecorderUIState() {
+    sealed class PlaybackState : StudioUIState {
         data object Playing : PlaybackState()
         data object Paused : PlaybackState()
     }
@@ -33,22 +41,22 @@ class RecordingViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val profile = savedStateHandle.toRoute<StudioRoute>()
+    private val studioParams = savedStateHandle.toRoute<StudioRoute>()
 
-    private val _audioRecorderUIState: MutableStateFlow<AudioRecorderUIState> =
-        MutableStateFlow(AudioRecorderUIState.Idle)
-    val audioRecorderUIState: StateFlow<AudioRecorderUIState> =
-        _audioRecorderUIState.stateIn(
+    private val _studioUIState: MutableStateFlow<StudioUIState> =
+        MutableStateFlow(StudioUIState.Idle)
+    val studioUIState: StateFlow<StudioUIState> =
+        _studioUIState.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            AudioRecorderUIState.Idle
+            StudioUIState.Idle
         )
 
     private val _amplitudes: MutableStateFlow<List<Float>> = MutableStateFlow(emptyList())
     val amplitudes: StateFlow<List<Float>> = _amplitudes
 
     fun startRecording(filePath: String) {
-        _audioRecorderUIState.value = AudioRecorderUIState.RecordingState.Recording
+        _studioUIState.value = StudioUIState.RecordingState.Recording
         audioRecorder.record()
 //        viewModelScope.launch {
 //            while (_isRecording.value) {
@@ -60,17 +68,17 @@ class RecordingViewModel @Inject constructor(
     }
 
     fun pauseRecording() {
-        _audioRecorderUIState.value = AudioRecorderUIState.RecordingState.Paused
+        _studioUIState.value = StudioUIState.RecordingState.Paused
         audioRecorder.pause()
     }
 
     fun startPlaying(audioPath: String) {
-        _audioRecorderUIState.value = AudioRecorderUIState.PlaybackState.Playing
+        _studioUIState.value = StudioUIState.PlaybackState.Playing
         audioPlayer.play(audioPath)
     }
 
     fun pausePlaying() {
-        _audioRecorderUIState.value = AudioRecorderUIState.PlaybackState.Paused
+        _studioUIState.value = StudioUIState.PlaybackState.Paused
         audioPlayer.pause()
     }
 }
