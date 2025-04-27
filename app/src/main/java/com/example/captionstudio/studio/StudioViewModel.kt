@@ -1,5 +1,6 @@
 package com.example.captionstudio.studio
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -56,6 +57,7 @@ class RecordingViewModel @Inject constructor(
     val amplitudes: StateFlow<List<Float>> = _amplitudes
 
     fun startRecording(filePath: String) {
+        Log.i("Test", "Starting recording")
         _studioUIState.value = StudioUIState.RecordingState.Recording
         audioRecorder.record()
 //        viewModelScope.launch {

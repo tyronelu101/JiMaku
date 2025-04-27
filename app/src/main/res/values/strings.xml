@@ -4,5 +4,7 @@
     <string name="transcriptions">Transcriptions</string>
     <string name="close">Close</string>
     <string name="check">Check</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
 
 </resources>

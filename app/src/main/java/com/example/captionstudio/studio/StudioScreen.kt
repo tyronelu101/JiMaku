@@ -2,6 +2,7 @@ package com.example.captionstudio.studio
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.provider.CalendarContract.Colors
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,12 +16,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -93,19 +98,16 @@ private fun StudioScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Green)
     ) {
         AudioWaveFormSeeker(
             amplitudes = amplitudes, modifier
                 .fillMaxWidth()
                 .weight(3f)
-                .background(Color.Red)
         )
         Captions(
             modifier = modifier
                 .fillMaxWidth()
                 .weight(4f)
-                .background(Color.Blue)
         )
         StudioController(
             studioUIState = studioUIState,
@@ -126,10 +128,11 @@ private fun StudioScreen(
             onPauseRecording = { pauseRecording() },
             onPlay = { onPlay() },
             onPause = { onPause() },
+            onDiscard = {},
+            onSave = {},
             modifier = modifier
                 .fillMaxWidth()
                 .weight(3f)
-                .background(Color.Gray)
         )
     }
 }
@@ -159,6 +162,8 @@ private fun StudioController(
     onPauseRecording: () -> Unit,
     onPlay: () -> Unit,
     onPause: () -> Unit,
+    onDiscard: () -> Unit,
+    onSave: () -> Unit,
     modifier: Modifier
 ) {
     Row(
@@ -169,11 +174,55 @@ private fun StudioController(
         IconButton(onClick = {}) {
             Icon(CaptionStudioIcons.CLOSE, contentDescription = stringResource(R.string.close))
         }
-        Button(onClick = {}) { Text("Record") }
-        Button(onClick = {}) { Text("Play") }
+        RecordButton(
+            isRecording = studioUIState is StudioUIState.RecordingState.Recording,
+            onRecord = onStartRecording,
+            onPause = onPauseRecording,
+            modifier = modifier
+        )
+        PlaybackButton(
+            isPlaying = studioUIState is StudioUIState.PlaybackState.Playing,
+            onPlay = onPlay,
+            onPause = onPause,
+            modifier = modifier
+        )
         IconButton(onClick = {}) {
-            Icon(CaptionStudioIcons.CHECK, contentDescription = stringResource(R.string.check))
+            Icon(CaptionStudioIcons.CHECK, contentDescription = stringResource(R.string.pause))
         }
+    }
+}
+
+@Composable
+private fun RecordButton(
+    isRecording: Boolean,
+    onRecord: () -> Unit,
+    onPause: () -> Unit,
+    modifier: Modifier
+) {
+    Button(
+        onClick = {
+            if (isRecording) onPause() else onRecord()
+        },
+    ) {
+        Text(text = if (isRecording) "Pause" else "Record")
+    }
+}
+
+
+@Composable
+private fun PlaybackButton(
+    isPlaying: Boolean,
+    onPlay: () -> Unit,
+    onPause: () -> Unit,
+    modifier: Modifier
+) {
+    IconButton(onClick = {
+        if (isPlaying) onPause() else onPlay()
+    }) {
+        Icon(
+            imageVector = if (isPlaying) CaptionStudioIcons.PAUSE else CaptionStudioIcons.PLAY,
+            contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play)
+        )
     }
 }
 
