@@ -69,7 +69,7 @@ fun StudioScreen(
         studioUIState,
         startRecording = { viewModel.startRecording("${context.externalCacheDir!!.absolutePath}/testing.mp3") },
         pauseRecording = { viewModel.pauseRecording() },
-        onPlay = { viewModel.startPlaying("${context.externalCacheDir!!.absolutePath}/testing.mp3}") },
+        onPlay = { viewModel.startPlaying("${context.externalCacheDir!!.absolutePath}/testing.mp3") },
         onPause = { viewModel.pausePlaying() },
         modifier
     )
