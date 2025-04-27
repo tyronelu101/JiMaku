@@ -1,7 +1,7 @@
 package com.example.captionstudio.domain.recorder
 
 interface AudioRecorder {
-    fun record()
+    fun record(path: String)
     fun pause()
     fun stop()
 }

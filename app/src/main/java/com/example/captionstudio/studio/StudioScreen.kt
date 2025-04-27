@@ -64,12 +64,13 @@ fun StudioScreen(
     val studioUIState: StudioUIState by viewModel.studioUIState.collectAsStateWithLifecycle()
     val amplitudes: List<Float> by viewModel.amplitudes.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val audioFilePath = "${context.cacheDir!!.absolutePath}/testing.pcm"
     StudioScreen(
         amplitudes,
         studioUIState,
-        startRecording = { viewModel.startRecording("${context.externalCacheDir!!.absolutePath}/testing.mp3") },
+        startRecording = { viewModel.startRecording(audioFilePath) },
         pauseRecording = { viewModel.pauseRecording() },
-        onPlay = { viewModel.startPlaying("${context.externalCacheDir!!.absolutePath}/testing.mp3") },
+        onPlay = { viewModel.startPlaying(audioFilePath) },
         onPause = { viewModel.pausePlaying() },
         modifier
     )

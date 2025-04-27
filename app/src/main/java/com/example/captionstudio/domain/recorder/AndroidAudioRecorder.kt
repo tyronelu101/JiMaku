@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -28,7 +29,7 @@ class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val c
     private var isRecording = false
     private var recorder: AudioRecord? = null
 
-    override fun record() {
+    override fun record(filePath: String) {
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.RECORD_AUDIO
@@ -48,10 +49,11 @@ class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val c
         isRecording = true
 
         val audioBuffer = ByteArray(bufferSize * 2)
-        val outputFile = FileOutputStream("${context.filesDir}/testing.pcm")
+        val outputFile = FileOutputStream(filePath)
         CoroutineScope(Dispatchers.IO).launch {
             while (isRecording) {
                 val data = recorder?.read(audioBuffer, 0, bufferSize * 2) ?: 0
+                Log.i("Test", "Writing out to file ${data}")
                 if (data > 0) {
                     outputFile.write(audioBuffer)
                 }
