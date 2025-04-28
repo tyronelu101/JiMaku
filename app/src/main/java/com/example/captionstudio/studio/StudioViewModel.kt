@@ -8,12 +8,15 @@ import androidx.navigation.toRoute
 import com.example.captionstudio.domain.player.AudioPlayer
 import com.example.captionstudio.domain.recorder.AudioRecorder
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.random.Random
 
 sealed interface StudioUIState {
     data object Idle : StudioUIState
@@ -52,13 +55,13 @@ class RecordingViewModel @Inject constructor(
     fun startRecording(filePath: String) {
         Log.i("Test", "Starting recording")
         _studioUIState.value = StudioUIState.RecordingState.Recording
-        audioRecorder.record(filePath)
-        viewModelScope.launch {
-//            while (studioUIState.value is StudioUIState.RecordingState.Recording) {
-//                _amplitudes.value =
-//                    amplitudes.value + listOf(audioRecorder.getAmplitude().toFloat() / 32767f)
-//                delay(120)
-//            }
+        audioRecorder.record(filePath, {})
+        viewModelScope.launch(Dispatchers.IO) {
+            while (studioUIState.value is StudioUIState.RecordingState.Recording) {
+                val amplitude = Math.round((Random.nextFloat() * 9) + 1) / 10f
+                _amplitudes.value = amplitudes.value + listOf(amplitude)
+                delay(60)
+            }
         }
     }
 

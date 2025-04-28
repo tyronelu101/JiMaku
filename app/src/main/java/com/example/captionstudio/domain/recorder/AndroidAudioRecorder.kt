@@ -11,6 +11,7 @@ import androidx.core.app.ActivityCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.FileOutputStream
 import javax.inject.Inject
@@ -29,7 +30,8 @@ class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val c
     private var isRecording = false
     private var recorder: AudioRecord? = null
 
-    override fun record(filePath: String) {
+    override fun record(filePath: String, amplitudeListener: (amplitude: Float) -> Unit) {
+        Log.i("Test", "Buffer size is ${bufferSize}")
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.RECORD_AUDIO
@@ -48,12 +50,20 @@ class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val c
         recorder?.startRecording()
         isRecording = true
 
-        val audioBuffer = ByteArray(bufferSize * 2)
+        val audioBuffer = ByteArray(bufferSize)
         val outputFile = FileOutputStream(filePath)
         CoroutineScope(Dispatchers.IO).launch {
             while (isRecording) {
-                val data = recorder?.read(audioBuffer, 0, bufferSize * 2) ?: 0
-                Log.i("Test", "Writing out to file ${data}")
+                val data = recorder?.read(audioBuffer, 0, bufferSize) ?: 0
+                val amplitudes = mutableListOf<Int>()
+                for (i in audioBuffer.indices step 2) {
+                    val leastSig = audioBuffer[i].toInt() and 0XFF
+                    val mostSig = audioBuffer[i + 1].toInt() and 0XFF
+                    val test = ((mostSig shl (8)) or leastSig)
+                    amplitudeListener(test.toFloat())
+                }
+                Log.i("Test", "Recording buffer is: ${audioBuffer.joinToString(", ")}")
+                Log.i("Test", "Amplitude is: ${amplitudes}")
                 if (data > 0) {
                     outputFile.write(audioBuffer)
                 }
