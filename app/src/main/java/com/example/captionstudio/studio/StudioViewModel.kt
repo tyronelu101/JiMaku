@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.abs
 import kotlin.random.Random
 
 sealed interface StudioUIState {
@@ -55,14 +56,9 @@ class RecordingViewModel @Inject constructor(
     fun startRecording(filePath: String) {
         Log.i("Test", "Starting recording")
         _studioUIState.value = StudioUIState.RecordingState.Recording
-        audioRecorder.record(filePath, {})
-        viewModelScope.launch(Dispatchers.IO) {
-            while (studioUIState.value is StudioUIState.RecordingState.Recording) {
-                val amplitude = Math.round((Random.nextFloat() * 9) + 1) / 10f
-                _amplitudes.value = amplitudes.value + listOf(amplitude)
-                delay(60)
-            }
-        }
+        audioRecorder.record(filePath, { amplitude ->
+            _amplitudes.value = amplitudes.value + listOf(amplitude)
+        })
     }
 
     fun pauseRecording() {

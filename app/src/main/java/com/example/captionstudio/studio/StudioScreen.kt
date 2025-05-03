@@ -76,7 +76,7 @@ fun StudioScreen(
     val studioUIState: StudioUIState by viewModel.studioUIState.collectAsStateWithLifecycle()
     val amplitudes: List<Float> by viewModel.amplitudes.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val audioFilePath = "${context.cacheDir!!.absolutePath}/testing.pcm"
+    val audioFilePath = "${context.getExternalFilesDir(null)!!.absolutePath}/testing.pcm"
     StudioScreen(
         amplitudes,
         studioUIState,
@@ -244,9 +244,6 @@ private fun AudioWaveFormSeeker(amplitudes: List<Float>, modifier: Modifier = Mo
 
     val waveWidth = 3.dp.toPx()
     val gap = waveWidth + 3.dp.toPx()
-    var verticalLinePosition by remember {
-        mutableFloatStateOf(-1F)
-    }
     val configuration = LocalConfiguration.current
     val screenWidthDp: Dp = configuration.screenWidthDp.dp
     val scrollState = rememberScrollState()
@@ -260,31 +257,31 @@ private fun AudioWaveFormSeeker(amplitudes: List<Float>, modifier: Modifier = Mo
                 .background(Color.Gray)
                 .fillMaxHeight()
                 .width(screenWidthDp)
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown()
-                        val downPointerId = down.id
-                        verticalLinePosition = down.position.x
-
-                        val touchSlopChange =
-                            awaitHorizontalTouchSlopOrCancellation(down.id) { change, _ ->
-                                Log.i("Test", "Touch slop reached.")
-                                change.consume()
-                            }
-                        Log.i("Test", "Touch slop is $touchSlopChange")
-
-                        if (touchSlopChange != null) {
-                            while (touchSlopChange.pressed) {
-                                val drag = awaitHorizontalDragOrCancellation(downPointerId) ?: break
-                                val deltaX = drag.positionChange().x
-                                drag.consume()
-                            }
-                            Log.i("Test", "Pointer up")
-                        } else {
-                            Log.i("Test", "Touch slop cancelled")
-                        }
-                    }
-                }
+//                .pointerInput(Unit) {
+//                    awaitEachGesture {
+//                        val down = awaitFirstDown()
+//                        val downPointerId = down.id
+//                        verticalLinePosition = down.position.x
+//
+//                        val touchSlopChange =
+//                            awaitHorizontalTouchSlopOrCancellation(down.id) { change, _ ->
+//                                Log.i("Test", "Touch slop reached.")
+//                                change.consume()
+//                            }
+//                        Log.i("Test", "Touch slop is $touchSlopChange")
+//
+//                        if (touchSlopChange != null) {
+//                            while (touchSlopChange.pressed) {
+//                                val drag = awaitHorizontalDragOrCancellation(downPointerId) ?: break
+//                                val deltaX = drag.positionChange().x
+//                                drag.consume()
+//                            }
+//                            Log.i("Test", "Pointer up")
+//                        } else {
+//                            Log.i("Test", "Touch slop cancelled")
+//                        }
+//                    }
+//                }
 
         ) {
             //Draw horizontal line
@@ -304,26 +301,26 @@ private fun AudioWaveFormSeeker(amplitudes: List<Float>, modifier: Modifier = Mo
 
             var currentOffsetX = size.width / 2
             amplitudes.forEach { amplitude ->
-                val waveHeight = waveMaxHeight
+                val waveHeight =
+                    if (amplitude < 0.5f) minHeight else waveMaxHeight * amplitude
+                Log.i("Test", "amplitude is ${amplitude} wave height is ${waveHeight}")
                 val offsetY = (size.height - waveHeight) / 2
-
                 drawRoundRect(
                     Color.White,
-                    topLeft = Offset(currentOffsetX, offsetY),
-                    size = Size(waveWidth, waveHeight),
+                    topLeft = Offset(currentOffsetX, offsetY.toFloat()),
+                    size = Size(waveWidth, waveHeight.toFloat()),
                     cornerRadius = CornerRadius(x = 48f, y = 48f)
                 )
                 currentOffsetX += gap
             }
 //            Max amplitude: 32767
-            if (verticalLinePosition != -1F) {
-                drawLine(
-                    color = Color.Blue,
-                    strokeWidth = 3.dp.toPx(),
-                    start = Offset(x = verticalLinePosition, y = 0.dp.toPx()),
-                    end = Offset(x = verticalLinePosition, y = size.height),
-                )
-            }
+            drawLine(
+                color = Color.Blue,
+                strokeWidth = 3.dp.toPx(),
+                start = Offset(x = size.width / 2, y = 0.dp.toPx()),
+                end = Offset(x = size.width / 2, y = size.height),
+            )
+
         }
     }
 }

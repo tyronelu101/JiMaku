@@ -11,16 +11,19 @@ import androidx.core.app.ActivityCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.FileOutputStream
+import java.lang.Math.pow
 import javax.inject.Inject
+import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val context: Context) :
     AudioRecorder {
 
     private val sampleRate = 44100
-    private val audioEncoding = AudioFormat.ENCODING_PCM_16BIT
+    private val audioEncoding = AudioFormat.ENCODING_PCM_8BIT
     private val bufferSize = AudioRecord.getMinBufferSize(
         sampleRate,
         AudioFormat.CHANNEL_IN_MONO,
@@ -50,20 +53,32 @@ class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val c
         recorder?.startRecording()
         isRecording = true
 
+        //Byte array is signed [-128, 127]
         val audioBuffer = ByteArray(bufferSize)
         val outputFile = FileOutputStream(filePath)
+        //A chunk is 1/4 of a second of data
+        val chunk = 44100 / 4
+        val segmentPerChunk = chunk / 3
+        val tempBuffer = mutableListOf<Byte>()
+
         CoroutineScope(Dispatchers.IO).launch {
             while (isRecording) {
                 val data = recorder?.read(audioBuffer, 0, bufferSize) ?: 0
-                val amplitudes = mutableListOf<Int>()
-                for (i in audioBuffer.indices step 2) {
-                    val leastSig = audioBuffer[i].toInt() and 0XFF
-                    val mostSig = audioBuffer[i + 1].toInt() and 0XFF
-                    val test = ((mostSig shl (8)) or leastSig)
-                    amplitudeListener(test.toFloat())
+                tempBuffer.addAll(audioBuffer.take(data))
+
+                if (tempBuffer.size >= segmentPerChunk) {
+                    val processedData =
+                        process(
+                            tempBuffer.subList(
+                                0,
+                                tempBuffer.size.coerceAtMost(segmentPerChunk)
+                            )
+                        )
+
+                    tempBuffer.subList(0, tempBuffer.size.coerceAtMost(segmentPerChunk)).clear()
+                    amplitudeListener(processedData)
                 }
-                Log.i("Test", "Recording buffer is: ${audioBuffer.joinToString(", ")}")
-                Log.i("Test", "Amplitude is: ${amplitudes}")
+
                 if (data > 0) {
                     outputFile.write(audioBuffer)
                 }
@@ -71,6 +86,17 @@ class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val c
             outputFile.flush()
             outputFile.close()
         }
+    }
+
+    private fun process(data: List<Byte>): Float {
+        val rms = sqrt((data.sumOf {
+            //Converts the signed byte to an unsigned integer
+            val unsignedByte = it.toInt() and 0XFF
+            //Center the value around [-128, 0, 127]
+            val centeredValue = unsignedByte - 128
+            centeredValue.toDouble().pow(2.0)
+        }) / data.size).toFloat()
+        return rms / 128f
     }
 
     override fun pause() {
