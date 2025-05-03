@@ -302,7 +302,7 @@ private fun AudioWaveFormSeeker(amplitudes: List<Float>, modifier: Modifier = Mo
             var currentOffsetX = size.width / 2
             amplitudes.forEach { amplitude ->
                 val waveHeight =
-                    if (amplitude < 0.5f) minHeight else waveMaxHeight * amplitude
+                    if (amplitude < 0.01f) minHeight else waveMaxHeight * amplitude
                 Log.i("Test", "amplitude is ${amplitude} wave height is ${waveHeight}")
                 val offsetY = (size.height - waveHeight) / 2
                 drawRoundRect(
