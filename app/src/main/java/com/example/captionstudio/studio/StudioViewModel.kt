@@ -1,6 +1,5 @@
 package com.example.captionstudio.studio
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,16 +7,11 @@ import androidx.navigation.toRoute
 import com.example.captionstudio.domain.player.AudioPlayer
 import com.example.captionstudio.domain.recorder.AudioRecorder
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.abs
-import kotlin.random.Random
 
 sealed interface StudioUIState {
     data object Idle : StudioUIState
@@ -54,7 +48,6 @@ class RecordingViewModel @Inject constructor(
     val amplitudes: StateFlow<List<Float>> = _amplitudes
 
     fun startRecording(filePath: String) {
-        Log.i("Test", "Starting recording")
         _studioUIState.value = StudioUIState.RecordingState.Recording
         audioRecorder.record(filePath, { amplitude ->
             _amplitudes.value = amplitudes.value + listOf(amplitude)

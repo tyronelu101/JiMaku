@@ -33,7 +33,7 @@ class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val c
     private var isRecording = false
     private var recorder: AudioRecord? = null
 
-    override fun record(filePath: String, amplitudeListener: (amplitude: Float) -> Unit) {
+    override fun record(path: String, amplitudeListener: (amplitude: Float) -> Unit) {
         Log.i("Test", "Buffer size is ${bufferSize}")
         if (ActivityCompat.checkSelfPermission(
                 context,
@@ -55,7 +55,7 @@ class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val c
 
         //Byte array is signed [-128, 127]
         val audioBuffer = ByteArray(bufferSize)
-        val outputFile = FileOutputStream(filePath)
+        val outputFile = FileOutputStream(path)
         //A chunk is 1/4 of a second of data
         val chunk = 44100 / 4
         val segmentPerChunk = chunk / 3
