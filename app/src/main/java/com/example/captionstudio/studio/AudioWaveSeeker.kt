@@ -55,13 +55,12 @@ fun AudioWaveSeeker(amplitudes: List<Float>, modifier: Modifier = Modifier) {
                         .fillMaxHeight()
                         .width(if (currentCanvasWidth < screenWidthDp) screenWidthDp / 2 else currentCanvasWidth)
                 ) {
-                    scale(scaleX = -1f, scaleY = 1f) {
                         amplitudes.forEachIndexed { index, amplitude ->
                             val waveHeight =
                                 if (amplitude < 0.1f) MIN_WAVE_BAR_HEIGHT else MAX_WAVE_BAR_HEIGHT * amplitude
                             val offsetY = (size.height - waveHeight.toPx()) / 2
                             val offSetX =
-                                center.toPx() +   (amplitudes.size - (index)) * (GAP_BETWEEN_BARS).toPx()
+                                center.toPx() - (amplitudes.size - (index)) * (GAP_BETWEEN_BARS).toPx()
                             drawRoundRect(
                                 Color.White,
                                 topLeft = Offset(offSetX, offsetY),
@@ -69,7 +68,7 @@ fun AudioWaveSeeker(amplitudes: List<Float>, modifier: Modifier = Modifier) {
                                 cornerRadius = CornerRadius(x = 48f, y = 48f)
                             )
                         }
-                    }
+
                 }
             }
             //Right side empty static wave bars
