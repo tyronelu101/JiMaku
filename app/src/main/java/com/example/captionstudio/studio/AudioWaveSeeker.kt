@@ -1,5 +1,6 @@
 package com.example.captionstudio.studio
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
@@ -10,16 +11,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.captionstudio.app.toPx
 import kotlin.math.roundToInt
 
 private val MAX_WAVE_BAR_HEIGHT = 80.dp
@@ -31,12 +34,13 @@ private val GAP_BETWEEN_BARS = BAR_WIDTH + 4.dp
 fun AudioWaveSeeker(amplitudes: List<Float>, modifier: Modifier = Modifier) {
 
     val scrollState = rememberScrollState()
-
+    val coroutineScope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
     val screenWidthDp: Dp = configuration.screenWidthDp.dp
     val center = screenWidthDp / 2
 
     val currentCanvasWidth = (3.dp + 3.dp) * amplitudes.size
+    Log.i("Test", "Scroll state value is ${scrollState.value}")
 
     Box(
         modifier = modifier
@@ -48,27 +52,30 @@ fun AudioWaveSeeker(amplitudes: List<Float>, modifier: Modifier = Modifier) {
                 modifier = modifier
                     .fillMaxHeight()
                     .fillMaxWidth(.5f)
-                    .horizontalScroll(scrollState)
             ) {
+                Log.i("Test", "Current width is ${currentCanvasWidth.toPx()}")
                 Canvas(
                     modifier = Modifier
                         .fillMaxHeight()
                         .width(if (currentCanvasWidth < screenWidthDp) screenWidthDp / 2 else currentCanvasWidth)
                 ) {
+                    var offSetX = 0f
+                    val translate = (center - GAP_BETWEEN_BARS * amplitudes.size).toPx()
+                    val startingX = scrollState.value
+                    translate(translate) {
                         amplitudes.forEachIndexed { index, amplitude ->
                             val waveHeight =
                                 if (amplitude < 0.1f) MIN_WAVE_BAR_HEIGHT else MAX_WAVE_BAR_HEIGHT * amplitude
                             val offsetY = (size.height - waveHeight.toPx()) / 2
-                            val offSetX =
-                                center.toPx() - (amplitudes.size - (index)) * (GAP_BETWEEN_BARS).toPx()
                             drawRoundRect(
                                 Color.White,
                                 topLeft = Offset(offSetX, offsetY),
                                 size = Size(BAR_WIDTH.toPx(), waveHeight.toPx()),
                                 cornerRadius = CornerRadius(x = 48f, y = 48f)
                             )
+                            offSetX += GAP_BETWEEN_BARS.toPx()
                         }
-
+                    }
                 }
             }
             //Right side empty static wave bars
