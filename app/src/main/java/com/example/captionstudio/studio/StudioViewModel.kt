@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed interface StudioUIState {
@@ -49,9 +50,11 @@ class RecordingViewModel @Inject constructor(
 
     fun startRecording(filePath: String) {
         _studioUIState.value = StudioUIState.RecordingState.Recording
-        audioRecorder.record(filePath, { amplitude ->
-            _amplitudes.value = amplitudes.value + listOf(amplitude)
-        })
+        viewModelScope.launch {
+            audioRecorder.record(filePath, { amplitude ->
+                _amplitudes.value = amplitudes.value + listOf(amplitude)
+            })
+        }
     }
 
     fun pauseRecording() {

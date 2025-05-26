@@ -76,13 +76,17 @@ private fun StudioScreen(
             }
         }
 
+    val allowSeek =
+        studioUIState is StudioUIState.PlaybackState.Paused || studioUIState is StudioUIState.RecordingState.Paused
     val context = LocalContext.current
     Column(
         modifier = modifier
             .fillMaxSize()
     ) {
         AudioWaveSeeker(
-            amplitudes = amplitudes, modifier.weight(3f)
+            allowSeek = allowSeek,
+            amplitudes = amplitudes,
+            modifier = modifier.weight(3f)
         )
         Captions(
             modifier = modifier
