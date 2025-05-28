@@ -45,6 +45,7 @@ fun AudioWaveSeeker(allowSeek: Boolean, amplitudes: List<Float>, modifier: Modif
 
     var scrollTick = 0f
     val scrollThreshold = GAP_BETWEEN_BARS.toPx()
+    val width = amplitudes.size * GAP_BETWEEN_BARS.toPx()
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -53,12 +54,13 @@ fun AudioWaveSeeker(allowSeek: Boolean, amplitudes: List<Float>, modifier: Modif
                     orientation = Orientation.Horizontal,
                     state = rememberScrollableState { delta ->
                         scrollTick += delta
-                        if (abs(scrollTick) >= scrollThreshold) {
+                        Log.i("Test", "offset is ${offset} width is ${width}")
+
+                        if ((offset in 0f..width) && abs(scrollTick) >= scrollThreshold) {
                             offset = if (scrollTick < 0) {
                                 maxOf(offset - scrollThreshold, 0f)
                             } else {
-                                maxOf(offset + scrollThreshold, 0f)
-
+                                minOf(offset + scrollThreshold, width)
                             }
                             scrollTick = 0f
                         }
