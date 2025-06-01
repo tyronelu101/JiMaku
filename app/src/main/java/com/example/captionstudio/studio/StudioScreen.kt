@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.captionstudio.R
 import com.example.captionstudio.app.ui.CaptionStudioIcons
+import com.example.captionstudio.domain.recorder.Amplitude
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -43,7 +44,7 @@ fun StudioScreen(
     viewModel: RecordingViewModel = hiltViewModel()
 ) {
     val studioUIState: StudioUIState by viewModel.studioUIState.collectAsStateWithLifecycle()
-    val amplitudes: List<Float> by viewModel.amplitudes.collectAsStateWithLifecycle()
+    val amplitudes: List<Amplitude> by viewModel.amplitudes.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val audioFilePath = "${context.getExternalFilesDir(null)!!.absolutePath}/testing.pcm"
     StudioScreen(
@@ -59,7 +60,7 @@ fun StudioScreen(
 
 @Composable
 private fun StudioScreen(
-    amplitudes: List<Float>,
+    amplitudes: List<Amplitude>,
     studioUIState: StudioUIState,
     startRecording: () -> Unit,
     pauseRecording: () -> Unit,

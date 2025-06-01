@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.captionstudio.domain.player.AudioPlayer
+import com.example.captionstudio.domain.recorder.Amplitude
 import com.example.captionstudio.domain.recorder.AudioRecorder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,8 +46,8 @@ class RecordingViewModel @Inject constructor(
             StudioUIState.Idle
         )
 
-    private val _amplitudes: MutableStateFlow<List<Float>> = MutableStateFlow(emptyList())
-    val amplitudes: StateFlow<List<Float>> = _amplitudes
+    private val _amplitudes: MutableStateFlow<List<Amplitude>> = MutableStateFlow(emptyList())
+    val amplitudes: StateFlow<List<Amplitude>> = _amplitudes
 
     fun startRecording(filePath: String) {
         _studioUIState.value = StudioUIState.RecordingState.Recording

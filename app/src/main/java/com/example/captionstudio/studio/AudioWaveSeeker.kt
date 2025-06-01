@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.captionstudio.app.toPx
+import com.example.captionstudio.domain.recorder.Amplitude
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -35,7 +36,7 @@ private val BAR_WIDTH = 3.dp
 private val GAP_BETWEEN_BARS = BAR_WIDTH + 4.dp
 
 @Composable
-fun AudioWaveSeeker(allowSeek: Boolean, amplitudes: List<Float>, modifier: Modifier = Modifier) {
+fun AudioWaveSeeker(allowSeek: Boolean, amplitudes: List<Amplitude>, modifier: Modifier = Modifier) {
 
     val configuration = LocalConfiguration.current
     val screenWidthDp: Dp = configuration.screenWidthDp.dp
@@ -98,7 +99,7 @@ fun AudioWaveSeeker(allowSeek: Boolean, amplitudes: List<Float>, modifier: Modif
                             var offSetX = 0f
                             for (amplitude in amplitudes) {
                                 val waveHeight =
-                                    if (amplitude < 0.1f) MIN_WAVE_BAR_HEIGHT else MAX_WAVE_BAR_HEIGHT * amplitude
+                                    if (amplitude.amplitude < 0.1f) MIN_WAVE_BAR_HEIGHT else MAX_WAVE_BAR_HEIGHT * amplitude.amplitude
                                 val offsetY = (size.height - waveHeight.toPx()) / 2
                                 drawRoundRect(
                                     Color.White,

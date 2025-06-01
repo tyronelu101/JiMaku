@@ -19,6 +19,8 @@ import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+data class Amplitude(val amplitude: Float, val time: Int)
+
 class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val context: Context) :
     AudioRecorder {
 
@@ -40,7 +42,10 @@ class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val c
     private val chunk = bytesPerSecond / 4
     private val segmentPerChunk = chunk / 3
 
-    override fun record(path: String, amplitudeListener: (amplitude: Float) -> Unit) {
+    var count = 0
+    val tick = 83
+
+    override fun record(path: String, amplitudeListener: (amplitude: Amplitude) -> Unit) {
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.RECORD_AUDIO
@@ -78,10 +83,10 @@ class AndroidAudioRecorder @Inject constructor(@ApplicationContext private val c
                                 tempBuffer.size.coerceAtMost(segmentPerChunk)
                             )
                         )
+                    ++count
 
                     tempBuffer.subList(0, tempBuffer.size.coerceAtMost(segmentPerChunk)).clear()
-                    Log.i("Test", "Data is ${processedData}")
-                    amplitudeListener(processedData)
+                    amplitudeListener(Amplitude(processedData, tick * count))
                 }
 
                 if (data > 0) {
