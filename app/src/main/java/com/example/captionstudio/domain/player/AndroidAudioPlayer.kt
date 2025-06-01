@@ -20,7 +20,7 @@ class AndroidAudioPlayer @Inject constructor() : AudioPlayer {
     private val buffer = AudioTrack.getMinBufferSize(
         44100,
         AudioFormat.CHANNEL_OUT_MONO,
-        AudioFormat.ENCODING_PCM_8BIT
+        AudioFormat.ENCODING_PCM_16BIT
     )
 
     init {
@@ -29,7 +29,7 @@ class AndroidAudioPlayer @Inject constructor() : AudioPlayer {
             .build()
         val audioFormat =
             AudioFormat.Builder().setSampleRate(44100).setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                .setEncoding(AudioFormat.ENCODING_PCM_8BIT).build()
+                .setEncoding(AudioFormat.ENCODING_PCM_16BIT).build()
         audioPlayer = AudioTrack(
             audioAttributes, audioFormat,
             buffer, MODE_STREAM, AudioManager.AUDIO_SESSION_ID_GENERATE
